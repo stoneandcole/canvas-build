@@ -75,6 +75,7 @@ ENV COMPILE_ASSETS_NPM_INSTALL=0
 RUN unset RUBY && bundle plugin install bundler-multilock && bundle config --global build.nokogiri --use-system-libraries && \
   bundle config --global build.ffi --enable-system-libffi && \
   bundle install
+ENV POSTGRES_PASSWORD=build-only ENCRYPTION_KEY=build-only-placeholder-not-a-real-key
 RUN yarn install --frozen-lockfile || yarn install --frozen-lockfile --network-concurrency 1 && \
   bin/rails canvas:compile_assets --trace && \
   rm -rf node_modules
