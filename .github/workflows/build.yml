@@ -1,0 +1,29 @@
+name: build canvas
+on:
+  push:
+    branches: [build]
+  workflow_dispatch:
+permissions:
+  contents: read
+  packages: write
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - name: Free disk
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache
+      - name: Get Canvas source
+        run: |
+          git init canvas && cd canvas
+          git remote add origin https://github.com/instructure/canvas-lms.git
+          git fetch --filter=blob:none origin
+          git checkout 2e2b4a46
+          for f in docker-compose/config/*.yml; do cp -n "$f" config/; done
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: Build and push
+        run: |
+          cd canvas
+          docker build -f Dockerfile.production -t ghcr.io/stoneandcole/canvas:2e2b4a46 .
+          docker push ghcr.io/stoneandcole/canvas:2e2b4a46
